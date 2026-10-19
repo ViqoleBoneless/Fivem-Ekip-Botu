@@ -1,0 +1,2421 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viqole — Ekip Yönetim Paneli</title>
+  <!-- Google Fonts - Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/style.css">
+  <!-- Yetki yüklenmeden önce menü öğelerinin anlık görünmesini engelle -->
+  <style>
+    body.perms-loading .menu-item[data-tab] {
+      opacity: 0;
+      pointer-events: none;
+      transition: none;
+    }
+    body.perms-loading .sidebar-menu {
+      pointer-events: none;
+    }
+    /* Yükleme overlay */
+    #perms-loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #0a0b10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      font-family: 'Inter', sans-serif;
+      transition: opacity 0.35s ease;
+    }
+    #perms-loading-overlay.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #perms-loading-overlay .lo-logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 30px rgba(124,58,237,0.35);
+    }
+    #perms-loading-overlay .lo-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin: 0 0 6px 0;
+      letter-spacing: -0.3px;
+    }
+    #perms-loading-overlay .lo-step {
+      font-size: 12px;
+      color: #64748b;
+      margin: 0 0 28px 0;
+      min-height: 18px;
+      transition: color 0.2s;
+    }
+    #perms-loading-overlay .lo-bar-wrap {
+      width: 200px;
+      height: 3px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    #perms-loading-overlay .lo-bar {
+      height: 100%;
+      width: 30%;
+      background: linear-gradient(90deg, #7c3aed, #6366f1);
+      border-radius: 99px;
+      animation: lo-slide 1.4s ease-in-out infinite;
+    }
+    @keyframes lo-slide {
+      0%   { transform: translateX(-100%); width: 40%; }
+      50%  { transform: translateX(120%);  width: 60%; }
+      100% { transform: translateX(300%);  width: 40%; }
+    }
+  </style>
+</head>
+<body class="perms-loading">
+
+  <!-- Yükleme Overlay -->
+  <div id="perms-loading-overlay">
+    <div class="lo-logo">⚡</div>
+    <p class="lo-title">Ekip Yönetim Paneli</p>
+    <p class="lo-step" id="lo-step-text">Bağlanıyor...</p>
+    <div class="lo-bar-wrap">
+      <div class="lo-bar"></div>
+    </div>
+  </div>
+
+  <!-- Toast Bildirimleri -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Ana Panel Düzeni -->
+  <div class="app-container">
+    
+    <!-- Sol Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="bot-logo-wrapper">
+          <img id="bot-avatar" src="" alt="Bot Avatar" class="bot-avatar">
+        </div>
+        <div class="bot-info-meta">
+          <h2 id="bot-tag">Yükleniyor...</h2>
+          <span class="status-badge"><span class="dot green"></span> Çevrimiçi</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-menu">
+        <div class="menu-label">Ana Menü</div>
+        <button class="menu-item active" data-tab="dashboard">
+          <i class="fa-solid fa-chart-line"></i> Genel Bakış
+        </button>
+        <button class="menu-item" data-tab="allperm">
+          <i class="fa-solid fa-key"></i> Yetki Yönetimi
+        </button>
+        <button class="menu-item" data-tab="config">
+          <i class="fa-solid fa-sliders"></i> Sistem Ayarları
+        </button>
+
+        <div class="sidebar-divider"></div>
+        <div class="menu-label">Yönetim</div>
+        <button class="menu-item" data-tab="ticket">
+          <i class="fa-solid fa-ticket"></i> Ticket
+        </button>
+        <button class="menu-item" data-tab="activity">
+          <i class="fa-solid fa-people-arrows"></i> Aktiflik
+        </button>
+        <button class="menu-item" data-tab="youtube">
+          <i class="fa-brands fa-youtube"></i> YouTube
+        </button>
+        <button class="menu-item" data-tab="banaf">
+          <i class="fa-solid fa-user-slash"></i> Ban Affı
+        </button>
+        <button class="menu-item" data-tab="cekilis">
+          <i class="fa-solid fa-gifts"></i> Çekiliş
+        </button>
+        <button class="menu-item" data-tab="events">
+          <i class="fa-solid fa-calendar-check"></i> Etkinlikler
+        </button>
+        <button class="menu-item" data-tab="farm">
+          <i class="fa-solid fa-tractor"></i> Farm
+        </button>
+        <button class="menu-item" data-tab="ickontrol">
+          <i class="fa-solid fa-gamepad"></i> IC Kontrol
+        </button>
+        <button class="menu-item" data-tab="bioguild">
+          <i class="fa-solid fa-user-check"></i> Bio & Guild Tarama
+        </button>
+
+        <div class="sidebar-divider"></div>
+        <div class="menu-label">Araçlar</div>
+        <button class="menu-item" data-tab="dmduyuru">
+          <i class="fa-solid fa-paper-plane"></i> DM Duyuru
+        </button>
+        <button class="menu-item" data-tab="database">
+          <i class="fa-solid fa-database"></i> Veri Sıfırlama
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <img id="user-avatar" src="" alt="User Avatar" class="user-avatar">
+          <div class="user-meta">
+            <span id="user-name" class="user-name">Kullanıcı</span>
+            <span class="user-role">Ekip Sahibi</span>
+          </div>
+        </div>
+        <button id="logout-btn" class="logout-btn" title="Kapat">
+          <i class="fa-solid fa-power-off"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Sağ Ana İçerik -->
+    <main class="main-content">
+      
+      <!-- Üst header -->
+      <header class="content-header">
+        <div class="header-left">
+          <h1 id="page-title">Genel Bakış</h1>
+          <p id="page-desc" class="subtitle">Botun canlı istatistikleri ve genel kontrolleri.</p>
+        </div>
+        <div class="guild-badge-container">
+          <img id="guild-icon" src="" alt="Guild Icon" class="guild-icon">
+          <span id="guild-name" class="guild-name">Sunucu Yükleniyor...</span>
+        </div>
+      </header>
+
+      <!-- SEKMELER (TAB CONTENTS) -->
+      
+      <!-- 1) Dashboard Tab -->
+      <div id="tab-dashboard" class="tab-content active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon blue"><i class="fa-solid fa-microchip"></i></div>
+            <div class="stat-body">
+              <h3>Bot Gecikmesi</h3>
+              <p id="stat-ping">- ms</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon purple"><i class="fa-solid fa-clock"></i></div>
+            <div class="stat-body">
+              <h3>Çalışma Süresi (Uptime)</h3>
+              <p id="stat-uptime">-</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-body">
+              <h3>Toplam Üye</h3>
+              <p id="stat-members">-</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-widgets">
+          <!-- Hızlı Güç Kontrolleri -->
+          <div class="widget-card glass">
+            <h2><i class="fa-solid fa-bolt"></i> Bot Güç Kontrolleri</h2>
+            <p class="widget-help">Botu yeniden başlatabilir veya kapatabilirsiniz. Yeniden başlatıldığında botunuz PM2 kurulu ise otomatik olarak saniyeler içerisinde geri açılacaktır.</p>
+            
+            <div class="btn-group">
+              <button id="btn-start" class="btn btn-success">
+                <i class="fa-solid fa-play"></i> Botu Başlat (Start)
+              </button>
+              <button id="btn-restart" class="btn btn-warning">
+                <i class="fa-solid fa-rotate-right"></i> Botu Yeniden Başlat (Restart)
+              </button>
+              <button id="btn-stop" class="btn btn-danger">
+                <i class="fa-solid fa-circle-stop"></i> Botu Kapat (Stop)
+              </button>
+            </div>
+          </div>
+
+          <!-- Sunucu Kurulum & Güncelleme -->
+          <div class="widget-card glass">
+            <h2><i class="fa-solid fa-screwdriver-wrench"></i> Sunucu Kurulum & Güncelleme</h2>
+            <p class="widget-help">Botun çalışması için gerekli tüm kanalları ve rolleri otomatik tarayabilir, eksikleri oluşturabilir veya tüm sistemi sıfırdan kurabilirsiniz.</p>
+            
+            <div class="btn-group">
+              <button id="btn-web-guncelle" class="btn btn-primary">
+                <i class="fa-solid fa-arrows-spin"></i> Sistemi Güncelle (Tara & Eksikleri Tamamla)
+              </button>
+              <button id="btn-web-ekip-kur" class="btn btn-warning">
+                <i class="fa-solid fa-server"></i> Ekip Sistem Kur
+              </button>
+            </div>
+          </div>
+
+          <!-- Ayar Ara -->
+          <div class="widget-card glass">
+            <h2><i class="fa-solid fa-magnifying-glass"></i> Ayar Ara</h2>
+            <p class="widget-help">Sunucu ayarlarını (roller, kanallar, loglar vb.) ismine göre arayabilir ve doğrudan buradan değiştirebilirsiniz.</p>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+              <input type="text" id="settings-search-input" placeholder="Ayar adı yazın... (örn: ban log, yetkili, ticket)" style="width: 100%; padding: 12px; font-size: 14px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.25); color: var(--text-main);">
+            </div>
+            
+            <div id="search-results-wrapper" style="margin-top: 20px; display: none;">
+              <h3 style="font-size: 14px; margin-bottom: 12px; color: var(--warning); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px;">Eşleşen Ayarlar</h3>
+              <div id="search-results-list" style="display: flex; flex-direction: column; gap: 15px;">
+                <!-- Dinamik doldurulacak -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2) Yetki Yonetimi Tab -->
+      <div id="tab-allperm" class="tab-content">
+        <div class="allperm-split">
+          <!-- Yetkili Kisiler -->
+          <div class="widget-card glass">
+            <h2><i class="fa-solid fa-user-shield"></i> Yetkili Kişiler</h2>
+            <p class="widget-help">Bota dinamik olarak tanımlanmış izinlere sahip kullanıcılar.</p>
+            
+            <div class="list-container" style="max-height: 400px; overflow-y: auto;">
+              <ul id="allperm-users-list" class="item-list">
+                <li class="loading-item">Yükleniyor...</li>
+              </ul>
+            </div>
+
+            <form id="add-user-perm-form" class="inline-form" style="flex-wrap: wrap; margin-top: 15px;">
+              <select id="select-user-id" style="flex: 1 1 40%;">
+                <option value="">Kişi Seçin...</option>
+              </select>
+              <input type="text" id="input-user-id" placeholder="Veya Discord ID girin..." style="flex: 1 1 40%; padding: 12px; font-size: 14px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.25); color: var(--text-main); outline: none;">
+              <select id="select-user-perm" required style="flex: 1 1 40%;">
+                <option value="">Yetki Seçin...</option>
+                <option value="allPerm">Tüm Yetkiler (All-Perm)</option>
+                <option value="ticketStaff">Alım Sorumlusu</option>
+                <option value="banCommand">Ban Sorumlusu</option>
+                <option value="farmSorumlusu">Farm Sorumlusu</option>
+                <option value="ytSorumlusu">YouTube Sorumlusu</option>
+                <option value="jail">Jail Sorumlusu</option>
+              </select>
+              <button type="submit" class="btn btn-primary" style="flex: 1 1 100%; margin-top: 10px;"><i class="fa-solid fa-plus"></i> Yetki Ver</button>
+            </form>
+          </div>
+
+          <!-- Yetkili Roller -->
+          <div class="widget-card glass">
+            <h2><i class="fa-solid fa-users-gear"></i> Yetkili Roller</h2>
+            <p class="widget-help">Bota dinamik olarak tanımlanmış izinlere sahip roller.</p>
+
+            <div class="list-container" style="max-height: 400px; overflow-y: auto;">
+              <ul id="allperm-roles-list" class="item-list">
+                <li class="loading-item">Yükleniyor...</li>
+              </ul>
+            </div>
+
+            <form id="add-role-perm-form" class="inline-form" style="flex-wrap: wrap; margin-top: 15px;">
+              <select id="select-role-id" required style="flex: 1 1 40%;">
+                <option value="">Rol Seçin...</option>
+              </select>
+              <select id="select-role-perm" required style="flex: 1 1 40%;">
+                <option value="">Yetki Seçin...</option>
+                <option value="allPerm">Tüm Yetkiler (All-Perm)</option>
+                <option value="ticketStaff">Alım Sorumlusu</option>
+                <option value="banCommand">Ban Sorumlusu</option>
+                <option value="farmSorumlusu">Farm Sorumlusu</option>
+                <option value="ytSorumlusu">YouTube Sorumlusu</option>
+                <option value="jail">Jail Sorumlusu</option>
+              </select>
+              <button type="submit" class="btn btn-primary" style="flex: 1 1 100%; margin-top: 10px;"><i class="fa-solid fa-plus"></i> Yetki Ver</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Web Panel Erişim Yönetimi (Sadece Owner) -->
+        <div id="web-panel-access-section" style="display:none; margin-top: 24px;">
+
+          <!-- Bölüm Başlığı -->
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.07);">
+            <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #7c3aed, #4f46e5); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <i class="fa-solid fa-shield-halved" style="color: #fff; font-size: 16px;"></i>
+            </div>
+            <div>
+              <h2 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--text-main);">Web Panel Erişim Yönetimi</h2>
+              <p style="margin: 2px 0 0; font-size: 13px; color: var(--text-muted);">Kişi veya rollere web panelinin hangi sekmelerine girebileceklerini belirleyin. <code>/ekipyonetim-panel</code> komutu bu izinlere göre özel link oluşturur.</p>
+            </div>
+          </div>
+
+          <div class="allperm-split">
+            <!-- Web Panel Yetkili Kişiler -->
+            <div class="widget-card glass">
+              <h2><i class="fa-solid fa-user-lock"></i> Panel Yetkili Kişiler</h2>
+              <p class="widget-help">Bu kişiler <code>/ekipyonetim-panel</code> komutuyla izinli sekmelere özel link alabilir.</p>
+
+              <div class="list-container" style="max-height: 350px; overflow-y: auto; margin-bottom: 16px;">
+                <ul id="panel-access-users-list" class="item-list">
+                  <li class="loading-item">Yükleniyor...</li>
+                </ul>
+              </div>
+
+              <!-- Kişi Ekle Formu -->
+              <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;">
+                <h3 style="font-size: 12px; margin: 0 0 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Yeni Kişi Ekle</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <select id="pa-user-select" style="flex: 1 1 45%; padding: 10px; font-size: 13px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.25); color: var(--text-main); outline: none;">
+                      <option value="">Kişi Seçin...</option>
+                    </select>
+                    <input type="text" id="pa-user-input" placeholder="Veya Discord ID girin..." style="flex: 1 1 45%; padding: 10px; font-size: 13px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.25); color: var(--text-main); outline: none;">
+                  </div>
+                  <!-- Sekme Seçimi -->
+                  <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                      <span style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Erişim Verilecek Sekmeler:</span>
+                      <div style="display: flex; gap: 6px;">
+                        <button type="button" class="btn" style="padding: 3px 9px; font-size: 11px;" onclick="paSelectAllTabs('user')">Tümü</button>
+                        <button type="button" class="btn" style="padding: 3px 9px; font-size: 11px; background: rgba(255,255,255,0.04);" onclick="paClearAllTabs('user')">Temizle</button>
+                      </div>
+                    </div>
+                    <div id="pa-user-tab-checkboxes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 6px;">
+                      <!-- Dinamik doldurulacak -->
+                    </div>
+                  </div>
+                  <button type="button" id="btn-add-panel-user" class="btn btn-primary" style="width: 100%;">
+                    <i class="fa-solid fa-plus"></i> Panel Erişimi Ver
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Web Panel Yetkili Roller -->
+            <div class="widget-card glass">
+              <h2><i class="fa-solid fa-people-group"></i> Panel Yetkili Roller</h2>
+              <p class="widget-help">Bu rollere sahip kişiler <code>/ekipyonetim-panel</code> komutuyla izinli sekmelere özel link alabilir.</p>
+
+              <div class="list-container" style="max-height: 350px; overflow-y: auto; margin-bottom: 16px;">
+                <ul id="panel-access-roles-list" class="item-list">
+                  <li class="loading-item">Yükleniyor...</li>
+                </ul>
+              </div>
+
+              <!-- Rol Ekle Formu -->
+              <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;">
+                <h3 style="font-size: 12px; margin: 0 0 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Yeni Rol Ekle</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <select id="pa-role-select" style="width: 100%; padding: 10px; font-size: 13px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.25); color: var(--text-main); outline: none;">
+                    <option value="">Rol Seçin...</option>
+                  </select>
+                  <!-- Sekme Seçimi -->
+                  <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                      <span style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Erişim Verilecek Sekmeler:</span>
+                      <div style="display: flex; gap: 6px;">
+                        <button type="button" class="btn" style="padding: 3px 9px; font-size: 11px;" onclick="paSelectAllTabs('role')">Tümü</button>
+                        <button type="button" class="btn" style="padding: 3px 9px; font-size: 11px; background: rgba(255,255,255,0.04);" onclick="paClearAllTabs('role')">Temizle</button>
+                      </div>
+                    </div>
+                    <div id="pa-role-tab-checkboxes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 6px;">
+                      <!-- Dinamik doldurulacak -->
+                    </div>
+                  </div>
+                  <button type="button" id="btn-add-panel-role" class="btn btn-primary" style="width: 100%;">
+                    <i class="fa-solid fa-plus"></i> Panel Erişimi Ver
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3) Config Tab -->
+      <div id="tab-config" class="tab-content">
+        <div class="settings-view-selector widget-card glass" style="margin-bottom: 20px; padding: 15px; display: flex; justify-content: space-between; align-items: center; gap: 15px;">
+          <span style="font-weight: 600; font-size: 14px; color: var(--text-muted);">Ayar Görünümü:</span>
+          <div class="btn-group" style="gap: 10px;">
+            <button type="button" class="btn btn-primary" id="btn-settings-view-1" style="padding: 8px 16px; font-size: 13px;">1. Form Görünümü</button>
+            <button type="button" class="btn btn-warning" id="btn-settings-view-2" style="padding: 8px 16px; font-size: 13px; background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: var(--text-muted);">2. ID Listesi Görünümü</button>
+          </div>
+        </div>
+
+        <!-- Görünüm 2 (Raw ID Listesi) Textarea Widget -->
+        <div id="settings-raw-view" class="widget-card glass" style="display: none;">
+          <h2><i class="fa-solid fa-code"></i> ID Listesi Görünümü (View 2)</h2>
+          <p class="widget-help">Log kanallarını ve rolleri Discord ID'leri şeklinde alt alta düzenleyebilirsiniz. Satırları düzenleyip kaydettikten sonra sistem otomatik algılayacaktır.</p>
+          <textarea id="settings-raw-text" rows="22" style="width: 100%; font-family: monospace; font-size: 13px; line-height: 1.6; background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); border-radius: 8px; color: #a5b4fc; padding: 15px; resize: vertical;" placeholder="Ticket log = ID&#10;Ban log = ID"></textarea>
+          <div style="margin-top: 15px;">
+            <button type="button" id="btn-save-raw-settings" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Ayarları Kaydet</button>
+          </div>
+        </div>
+
+        <form id="system-settings-form" class="settings-form-layout">
+          <!-- Sistem Aktif / Pasif Kontrolleri -->
+          <div class="widget-card glass" style="grid-column: span 2;">
+            <h2><i class="fa-solid fa-toggle-on"></i> Sistem Toggles (Aç / Kapat)</h2>
+            <p class="widget-help">Her bir modülü ve işlevi buradan tamamen açıp kapatabilirsiniz. Devre dışı bırakılan sistemler bot tarafından çalıştırılmaz.</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-top: 15px;">
+              <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 0; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <input type="checkbox" id="cfg-warningSystemEnabled" style="width: 20px; height: 20px; cursor: pointer;">
+                  <label for="cfg-warningSystemEnabled" style="cursor: pointer; user-select: none; margin-bottom: 0;">Uyarı Sistemi</label>
+                </div>
+                <button type="button" class="btn-icon-only edit btn-system-settings" data-system="warning" style="width: 26px; height: 26px; font-size: 13px;" title="Ayarları Düzenle">
+                  <i class="fa-solid fa-gear"></i>
+                </button>
+              </div>
+              <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 0; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <input type="checkbox" id="cfg-farmSystemEnabled" style="width: 20px; height: 20px; cursor: pointer;">
+                  <label for="cfg-farmSystemEnabled" style="cursor: pointer; user-select: none; margin-bottom: 0;">Farm Sistemi</label>
+                </div>
+                <button type="button" class="btn-icon-only edit btn-system-settings" data-system="farm" style="width: 26px; height: 26px; font-size: 13px;" title="Ayarları Düzenle">
+                  <i class="fa-solid fa-gear"></i>
+                </button>
+              </div>
+              <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 0; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <input type="checkbox" id="cfg-ticketSystemEnabled" style="width: 20px; height: 20px; cursor: pointer;">
+                  <label for="cfg-ticketSystemEnabled" style="cursor: pointer; user-select: none; margin-bottom: 0;">Ticket Sistemi</label>
+                </div>
+                <button type="button" class="btn-icon-only edit btn-system-settings" data-system="ticket" style="width: 26px; height: 26px; font-size: 13px;" title="Ayarları Düzenle">
+                  <i class="fa-solid fa-gear"></i>
+                </button>
+              </div>
+              <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 0; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <input type="checkbox" id="cfg-youtubeSystemEnabled" style="width: 20px; height: 20px; cursor: pointer;">
+                  <label for="cfg-youtubeSystemEnabled" style="cursor: pointer; user-select: none; margin-bottom: 0;">YouTube Sistemi</label>
+                </div>
+                <button type="button" class="btn-icon-only edit btn-system-settings" data-system="youtube" style="width: 26px; height: 26px; font-size: 13px;" title="Ayarları Düzenle">
+                  <i class="fa-solid fa-gear"></i>
+                </button>
+              </div>
+              <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 0; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <input type="checkbox" id="cfg-banAfSystemEnabled" style="width: 20px; height: 20px; cursor: pointer;">
+                  <label for="cfg-banAfSystemEnabled" style="cursor: pointer; user-select: none; margin-bottom: 0;">Ban Affı Sistemi</label>
+                </div>
+                <button type="button" class="btn-icon-only edit btn-system-settings" data-system="banAf" style="width: 26px; height: 26px; font-size: 13px;" title="Ayarları Düzenle">
+                  <i class="fa-solid fa-gear"></i>
+                </button>
+              </div>
+              <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 0; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <input type="checkbox" id="cfg-giveawaySystemEnabled" style="width: 20px; height: 20px; cursor: pointer;">
+                  <label for="cfg-giveawaySystemEnabled" style="cursor: pointer; user-select: none; margin-bottom: 0;">Çekiliş Sistemi</label>
+                </div>
+                <button type="button" class="btn-icon-only edit btn-system-settings" data-system="giveaway" style="width: 26px; height: 26px; font-size: 13px;" title="Ayarları Düzenle">
+                  <i class="fa-solid fa-gear"></i>
+                </button>
+              </div>
+              <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 0; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <input type="checkbox" id="cfg-activitySystemEnabled" style="width: 20px; height: 20px; cursor: pointer;">
+                  <label for="cfg-activitySystemEnabled" style="cursor: pointer; user-select: none; margin-bottom: 0;">Aktiflik Sistemi</label>
+                </div>
+                <button type="button" class="btn-icon-only edit btn-system-settings" data-system="activity" style="width: 26px; height: 26px; font-size: 13px;" title="Ayarları Düzenle">
+                  <i class="fa-solid fa-gear"></i>
+                </button>
+              </div>
+              <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 0; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <input type="checkbox" id="cfg-icKontrolSystemEnabled" style="width: 20px; height: 20px; cursor: pointer;">
+                  <label for="cfg-icKontrolSystemEnabled" style="cursor: pointer; user-select: none; margin-bottom: 0;">IC Kontrol Sistemi</label>
+                </div>
+                <button type="button" class="btn-icon-only edit btn-system-settings" data-system="icKontrol" style="width: 26px; height: 26px; font-size: 13px;" title="Ayarları Düzenle">
+                  <i class="fa-solid fa-gear"></i>
+                </button>
+              </div>
+              <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 0; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <input type="checkbox" id="cfg-loggingSystemEnabled" style="width: 20px; height: 20px; cursor: pointer;">
+                  <label for="cfg-loggingSystemEnabled" style="cursor: pointer; user-select: none; margin-bottom: 0;">Log Kanalları Sistemi</label>
+                </div>
+                <button type="button" class="btn-icon-only edit btn-system-settings" data-system="logging" style="width: 26px; height: 26px; font-size: 13px;" title="Ayarları Düzenle">
+                  <i class="fa-solid fa-gear"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Genel Bilgiler -->
+          <div class="widget-card glass">
+            <h2><i class="fa-solid fa-circle-info"></i> Temel Bilgiler</h2>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="cfg-ekipIsmi">Ekip İsmi</label>
+                <input type="text" id="cfg-ekipIsmi" placeholder="Örn: Viqole Ekip">
+              </div>
+              <div class="form-group">
+                <label for="cfg-guildId">Guild ID (Sunucu ID)</label>
+                <input type="text" id="cfg-guildId" disabled>
+              </div>
+            </div>
+          </div>
+
+          <!-- Roller -->
+          <div class="widget-card glass">
+            <h2><i class="fa-solid fa-id-card-clip"></i> Sistem Rolleri</h2>
+            <div class="form-grid">
+              <div class="form-group role-search-group">
+                <label for="cfg-banCommandRoleId">Ban Komutu Rolü</label>
+                <div class="searchable-select" data-for="cfg-banCommandRoleId">
+                  <select id="cfg-banCommandRoleId" class="guild-role-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Rol adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group role-search-group">
+                <label for="cfg-ticketStaffRoleId">Ticket Yetkilisi Rolü</label>
+                <div class="searchable-select" data-for="cfg-ticketStaffRoleId">
+                  <select id="cfg-ticketStaffRoleId" class="guild-role-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Rol adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group role-search-group">
+                <label for="cfg-onayRoleId">Member (Ekip Üyesi)</label>
+                <div class="searchable-select" data-for="cfg-onayRoleId">
+                  <select id="cfg-onayRoleId" class="guild-role-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Rol adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+
+              <div class="form-group role-search-group">
+                <label for="cfg-ytSorumlusuRoleId">YouTube Sorumlusu Rolü</label>
+                <div class="searchable-select" data-for="cfg-ytSorumlusuRoleId">
+                  <select id="cfg-ytSorumlusuRoleId" class="guild-role-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Rol adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group role-search-group">
+                <label for="cfg-farmSorumlusuRoleId">Farm Sorumlusu Rolü</label>
+                <div class="searchable-select" data-for="cfg-farmSorumlusuRoleId">
+                  <select id="cfg-farmSorumlusuRoleId" class="guild-role-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Rol adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group role-search-group">
+                <label for="cfg-autoRoleId">Oto Verilecek Rol (Oto Rol)</label>
+                <div class="searchable-select" data-for="cfg-autoRoleId">
+                  <select id="cfg-autoRoleId" class="guild-role-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Rol adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- Kanallar -->
+          <div class="widget-card glass">
+            <h2><i class="fa-solid fa-hashtag"></i> Log ve Sistem Kanalları</h2>
+            <div class="form-grid">
+              <div class="form-group channel-search-group">
+                <label for="cfg-ticketChannelId">Ticket Açma Kanalı</label>
+                <div class="searchable-select" data-for="cfg-ticketChannelId">
+                  <select id="cfg-ticketChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-videoChannelId">Video / SS Kanalı</label>
+                <div class="searchable-select" data-for="cfg-videoChannelId">
+                  <select id="cfg-videoChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-banAfChannelId">Ban Af Başvuru Kanalı</label>
+                <div class="searchable-select" data-for="cfg-banAfChannelId">
+                  <select id="cfg-banAfChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-onayChannelId">Onay İstek Kanalı</label>
+                <div class="searchable-select" data-for="cfg-onayChannelId">
+                  <select id="cfg-onayChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-farmIstekChannelId">Farm Talep Kanalı</label>
+                <div class="searchable-select" data-for="cfg-farmIstekChannelId">
+                  <select id="cfg-farmIstekChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-youtubeBasvuruChannelId">YouTube Başvuru Kanalı</label>
+                <div class="searchable-select" data-for="cfg-youtubeBasvuruChannelId">
+                  <select id="cfg-youtubeBasvuruChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+            </div>
+            
+            <h3 class="settings-sub-header">Log Kanalları</h3>
+            <div class="form-grid">
+              <div class="form-group channel-search-group">
+                <label for="cfg-banLogChannelId">Ban Log Kanalı</label>
+                <div class="searchable-select" data-for="cfg-banLogChannelId">
+                  <select id="cfg-banLogChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-unbanLogChannelId">Unban Log Kanalı</label>
+                <div class="searchable-select" data-for="cfg-unbanLogChannelId">
+                  <select id="cfg-unbanLogChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-warningLogChannelId">Uyarı Log Kanalı</label>
+                <div class="searchable-select" data-for="cfg-warningLogChannelId">
+                  <select id="cfg-warningLogChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-warningPublicChannelId">Uyarı Duyuru Kanalı (Public)</label>
+                <div class="searchable-select" data-for="cfg-warningPublicChannelId">
+                  <select id="cfg-warningPublicChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-farmLogChannelId">Farm Log Kanalı 1</label>
+                <div class="searchable-select" data-for="cfg-farmLogChannelId">
+                  <select id="cfg-farmLogChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-farmLogChannelTwoId">Farm Log Kanalı 2</label>
+                <div class="searchable-select" data-for="cfg-farmLogChannelTwoId">
+                  <select id="cfg-farmLogChannelTwoId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-ticketLogChannelId">Ticket Log Kanalı</label>
+                <div class="searchable-select" data-for="cfg-ticketLogChannelId">
+                  <select id="cfg-ticketLogChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-banAfLogChannelId">Ban Af Log Kanalı</label>
+                <div class="searchable-select" data-for="cfg-banAfLogChannelId">
+                  <select id="cfg-banAfLogChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-youtubeLogChannelId">YouTube Log Kanalı</label>
+                <div class="searchable-select" data-for="cfg-youtubeLogChannelId">
+                  <select id="cfg-youtubeLogChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-roleLogChannelId">Rol İşlem Log Kanalı</label>
+                <div class="searchable-select" data-for="cfg-roleLogChannelId">
+                  <select id="cfg-roleLogChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-dmDuyuruLogChannelId">DM Duyuru Log Kanalı</label>
+                <div class="searchable-select" data-for="cfg-dmDuyuruLogChannelId">
+                  <select id="cfg-dmDuyuruLogChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-botLogChannelId">Bot Sistem Log Kanalı</label>
+                <div class="searchable-select" data-for="cfg-botLogChannelId">
+                  <select id="cfg-botLogChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-activityLogChannelId">Aktiflik Log Kanalı</label>
+                <div class="searchable-select" data-for="cfg-activityLogChannelId">
+                  <select id="cfg-activityLogChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-messageLogChannelId">Mesaj Log Kanalı</label>
+                <div class="searchable-select" data-for="cfg-messageLogChannelId">
+                  <select id="cfg-messageLogChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+            </div>
+
+            <h3 class="settings-sub-header">Yönetim Kategorileri</h3>
+            <div class="form-grid">
+              <div class="form-group category-search-group">
+                <label for="cfg-yonetimCategoryId">Yönetim Kategori ID (Kanal Listesi Kategori)</label>
+                <div class="searchable-select" data-for="cfg-yonetimCategoryId">
+                  <select id="cfg-yonetimCategoryId" class="guild-category-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kategori adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group category-search-group">
+                <label for="cfg-killCategoryId">Kill Kategori ID</label>
+                <div class="searchable-select" data-for="cfg-killCategoryId">
+                  <select id="cfg-killCategoryId" class="guild-category-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kategori adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group category-search-group">
+                <label for="cfg-basvuruCategoryId">Başvuru Kategori ID</label>
+                <div class="searchable-select" data-for="cfg-basvuruCategoryId">
+                  <select id="cfg-basvuruCategoryId" class="guild-category-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kategori adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="cfg-aktifIslemlerChannelId">Aktif İşlemler Kanalı</label>
+                <div class="searchable-select" data-for="cfg-aktifIslemlerChannelId">
+                  <select id="cfg-aktifIslemlerChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kaydet Butonu -->
+          <div class="form-submit-container">
+            <button type="submit" class="btn btn-success btn-large">
+              <i class="fa-solid fa-floppy-disk"></i> Değişiklikleri Kaydet
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- 7) Ticket Tab -->
+      <div id="tab-ticket" class="tab-content">
+        <!-- Ticket Temel Ayarları -->
+        <div class="widget-card glass">
+          <h2><i class="fa-solid fa-ticket"></i> Ticket Temel Ayarları</h2>
+          <p class="widget-help">Ticket kanalını, yetkilisini ve log kanalını buradan yönetebilirsiniz.</p>
+          
+          <form id="ticket-settings-form">
+            <div class="form-grid">
+              <div class="form-group role-search-group">
+                <label for="ticket-cfg-ticketStaffRoleId">Ticket Yetkilisi Rolü</label>
+                <div class="searchable-select" data-for="ticket-cfg-ticketStaffRoleId">
+                  <select id="ticket-cfg-ticketStaffRoleId" class="guild-role-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Rol adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="ticket-cfg-ticketChannelId">Ticket Açma Kanalı</label>
+                <div class="searchable-select" data-for="ticket-cfg-ticketChannelId">
+                  <select id="ticket-cfg-ticketChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group channel-search-group">
+                <label for="ticket-cfg-ticketLogChannelId">Ticket Log Kanalı</label>
+                <div class="searchable-select" data-for="ticket-cfg-ticketLogChannelId">
+                  <select id="ticket-cfg-ticketLogChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group category-search-group">
+                <label for="ticket-cfg-basvuruCategoryId">Varsayılan Kategori ID (Kanal Listesi Kategori)</label>
+                <div class="searchable-select" data-for="ticket-cfg-basvuruCategoryId">
+                  <select id="ticket-cfg-basvuruCategoryId" class="guild-category-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kategori adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="ticket-cfg-ticketPanelStyle">Ticket Panel Görünümü</label>
+                <select id="ticket-cfg-ticketPanelStyle">
+                  <option value="style1">1. Görünüm (Klasik Tasarım & Üst Banner)</option>
+                  <option value="style2">2. Görünüm (Modern V2 - Sade Tasarım & Alt Banner)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="ticket-cfg-ticketPanelType">Ticket Etkileşim Türü</label>
+                <select id="ticket-cfg-ticketPanelType">
+                  <option value="select">Açılır Liste (Select Menu)</option>
+                  <option value="button">Butonlar (Buttons)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="ticket-cfg-ticketEmbedColor">Ticket Panel Embed Rengi (Hex)</label>
+                <input type="color" id="ticket-cfg-ticketEmbedColor" style="height: 40px; padding: 2px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; background: transparent; cursor: pointer; width: 100%;">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-success" style="margin-top: 15px;">
+              <i class="fa-solid fa-floppy-disk"></i> Temel Ayarları Kaydet
+            </button>
+          </form>
+        </div>
+
+        <!-- Onay & Red Mesaj Yönetimi -->
+        <div class="widget-card glass">
+          <h2><i class="fa-solid fa-envelope-open-text"></i> Onay & Red Mesaj Yönetimi</h2>
+          <p class="widget-help">Ticket onaylandığında ve reddedildiğinde gönderilecek mesaj şablonlarını ve bildirim kanalını yönetin. <code>{user}</code>, <code>{reason}</code>, <code>{panda}</code>, <code>{unlem}</code> değişkenlerini kullanabilirsiniz.</p>
+          
+          <form id="ticket-approval-messages-form">
+            <div class="form-grid">
+              <div class="form-group channel-search-group" style="grid-column: span 2;">
+                <label for="ticket-cfg-onayChannelId">Onay - Red Bildirim Kanalı</label>
+                <div class="searchable-select" data-for="ticket-cfg-onayChannelId">
+                  <select id="ticket-cfg-onayChannelId" class="guild-channel-select" style="display:none;"><option value="">Seçiniz...</option></select>
+                  <div class="ss-trigger">
+                    <span class="ss-value">Seçiniz...</span>
+                    <input type="text" class="ss-search-input" placeholder="🔍 Kanal adı veya ID yazın..." autocomplete="off" style="display:none;">
+                    <div class="ss-actions">
+                      <button type="button" class="ss-clear-btn" title="Temizle" style="display:none;">&times;</button>
+                      <i class="fa-solid fa-chevron-down ss-arrow"></i>
+                    </div>
+                  </div>
+                  <div class="ss-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div class="form-group">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+                  <label for="ticket-cfg-ticketApprovalDmMessage" style="margin-bottom: 0;">DM'den Giden Onay Mesajı</label>
+                  <div style="display: flex; align-items: center; gap: 5px;">
+                    <input type="checkbox" id="ticket-cfg-ticketApprovalDmEnabled" style="width: 16px; height: 16px; cursor: pointer;">
+                    <label for="ticket-cfg-ticketApprovalDmEnabled" style="margin-bottom: 0; font-size: 12px; cursor: pointer; user-select: none;">Aktif</label>
+                  </div>
+                </div>
+                <textarea id="ticket-cfg-ticketApprovalDmMessage" rows="3" required></textarea>
+              </div>
+              <div class="form-group">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+                  <label for="ticket-cfg-ticketRejectionDmMessage" style="margin-bottom: 0;">DM'den Giden Red Mesajı</label>
+                  <div style="display: flex; align-items: center; gap: 5px;">
+                    <input type="checkbox" id="ticket-cfg-ticketRejectionDmEnabled" style="width: 16px; height: 16px; cursor: pointer;">
+                    <label for="ticket-cfg-ticketRejectionDmEnabled" style="margin-bottom: 0; font-size: 12px; cursor: pointer; user-select: none;">Aktif</label>
+                  </div>
+                </div>
+                <textarea id="ticket-cfg-ticketRejectionDmMessage" rows="3" required></textarea>
+              </div>
+              <div class="form-group">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+                  <label for="ticket-cfg-ticketApprovalChannelMessage" style="margin-bottom: 0;">Kanala Giden Onay Mesajı</label>
+                  <div style="display: flex; align-items: center; gap: 5px;">
+                    <input type="checkbox" id="ticket-cfg-ticketApprovalChannelEnabled" style="width: 16px; height: 16px; cursor: pointer;">
+                    <label for="ticket-cfg-ticketApprovalChannelEnabled" style="margin-bottom: 0; font-size: 12px; cursor: pointer; user-select: none;">Aktif</label>
+                  </div>
+                </div>
+                <textarea id="ticket-cfg-ticketApprovalChannelMessage" rows="3" required></textarea>
+              </div>
+              <div class="form-group">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+                  <label for="ticket-cfg-ticketRejectionChannelMessage" style="margin-bottom: 0;">Kanala Giden Red Mesajı</label>
+                  <div style="display: flex; align-items: center; gap: 5px;">
+                    <input type="checkbox" id="ticket-cfg-ticketRejectionChannelEnabled" style="width: 16px; height: 16px; cursor: pointer;">
+                    <label for="ticket-cfg-ticketRejectionChannelEnabled" style="margin-bottom: 0; font-size: 12px; cursor: pointer; user-select: none;">Aktif</label>
+                  </div>
+                </div>
+                <textarea id="ticket-cfg-ticketRejectionChannelMessage" rows="3" required></textarea>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-success" style="margin-top: 15px;">
+              <i class="fa-solid fa-floppy-disk"></i> Mesaj Ayarlarını Kaydet
+            </button>
+          </form>
+        </div>
+
+        <!-- Başvuru Formu Soruları -->
+        <div class="widget-card glass">
+          <h2><i class="fa-solid fa-file-signature"></i> Başvuru Formu Metni</h2>
+          <p class="widget-help">Kullanıcı başvuru yaptığında kanala gönderilecek formu buradan düzenleyebilirsiniz.</p>
+          
+          <form id="ticket-form-text-form">
+            <div class="form-group">
+              <label for="ticket-form-text">Başvuru Formu Metni</label>
+              <textarea id="ticket-form-text" rows="8" placeholder="Başvuru formu içeriğini girin..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-success">
+              <i class="fa-solid fa-floppy-disk"></i> Formu Kaydet
+            </button>
+          </form>
+        </div>
+
+        <!-- Ticket Kategorileri (Seçenekler) -->
+        <div class="widget-card glass">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2><i class="fa-solid fa-list-check"></i> Ticket Seçenekleri (Kategoriler)</h2>
+            <button type="button" class="btn btn-primary" onclick="showNewCategoryForm()">
+              <i class="fa-solid fa-plus"></i> Yeni Kategori
+            </button>
+          </div>
+          <p class="widget-help">Ticket panelinde listelenecek kategorileri etkinleştirebilir, devre dışı bırakabilir veya ekleyip/silebilirsiniz.</p>
+          
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Kategori ID</th>
+                  <th>Görünen Adı</th>
+                  <th>Emoji ID / Karakter</th>
+                  <th>Açılacağı Discord Kategorisi</th>
+                  <th>Buton Rengi</th>
+                  <th>Açıklama</th>
+                  <th>Durum</th>
+                  <th>İşlemler</th>
+                </tr>
+              </thead>
+              <tbody id="ticket-categories-tbody">
+                <!-- Dinamik Doldurulacak -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Kategori Ekle / Düzenle Formu -->
+        <div class="widget-card glass" id="category-form-card" style="display: none;">
+          <h2 id="category-form-title"><i class="fa-solid fa-plus"></i> Kategori Ekle / Düzenle</h2>
+          <p class="widget-help">Mevcut bir kategoriyi düzenleyebilir veya yeni bir kategori ekleyebilirsiniz.</p>
+          
+          <form id="ticket-category-form">
+            <input type="hidden" id="cat-is-edit" value="false">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="cat-id">Kategori ID (Benzersiz slug, örn: destek)</label>
+                <input type="text" id="cat-id" placeholder="Örn: yardim" required>
+              </div>
+              <div class="form-group">
+                <label for="cat-label">Görünen Adı</label>
+                <input type="text" id="cat-label" placeholder="Örn: Genel Yardım" required>
+              </div>
+              <div class="form-group">
+                <label for="cat-emoji">Emoji ID / Standart Emoji</label>
+                <input type="text" id="cat-emoji" placeholder="Örn: 1507734289255628990 veya 📞" required>
+              </div>
+              <div class="form-group">
+                <label for="cat-categoryId">Açılacağı Discord Kategorisi</label>
+                <select id="cat-categoryId" class="guild-category-select" required>
+                  <option value="">Seçiniz...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="cat-buttonStyle">Buton Rengi / Stili</label>
+                <select id="cat-buttonStyle" required>
+                  <option value="Primary">Mavi (Primary)</option>
+                  <option value="Secondary">Gri (Secondary)</option>
+                  <option value="Success">Yeşil (Success)</option>
+                  <option value="Danger">Kırmızı (Danger)</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+              <label for="cat-description">Açıklama (Ticket panelinde görünür)</label>
+              <input type="text" id="cat-description" placeholder="Örn: Genel sorularınız için ticket açın">
+            </div>
+            <div class="btn-group" style="margin-top: 15px;">
+              <button type="submit" class="btn btn-success">
+                <i class="fa-solid fa-floppy-disk"></i> Kategoriyi Kaydet
+              </button>
+              <button type="button" class="btn btn-danger" onclick="hideCategoryForm()">
+                Vazgeç
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- 4) DM Duyuru Tab -->
+      <div id="tab-dmduyuru" class="tab-content">
+        <div class="widget-card glass">
+          <h2><i class="fa-solid fa-bullhorn"></i> Rol Bazlı DM Duyurusu Gönder</h2>
+          <p class="widget-help">Seçilen roldeki tüm üyelere bot aracılığıyla özel mesaj (DM) olarak duyuru gönderir. Bu işlem arka planda çalışır ve tamamlandığında ilgili log kanalına detayları yazar.</p>
+          
+          <form id="dm-announce-form" class="announcement-form">
+            <div class="form-group">
+              <label for="announce-role-id">Hedef Rol</label>
+              <select id="announce-role-id" required>
+                <option value="">Lütfen Rol Seçin...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="announce-message">Duyuru Mesajı</label>
+              <textarea id="announce-message" rows="8" placeholder="Gönderilecek duyuru metnini buraya yazın..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-large">
+              <i class="fa-solid fa-paper-plane"></i> Duyuruyu Gönder
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- 5) Events Tab -->
+      <div id="tab-events" class="tab-content">
+        <!-- Aktif Etkinlikler -->
+        <div class="widget-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0;"><i class="fa-solid fa-hourglass-half"></i> Aktif Etkinlikler</h2>
+            <button type="button" class="btn btn-danger btn-sm" id="btn-clear-all-events">
+              <i class="fa-solid fa-trash-can"></i> Bütün Etkinlikleri Sil
+            </button>
+          </div>
+          <p class="widget-help">Şu anda sunucuda açık olan veya bekleyen etkinlik listesi.</p>
+          
+          <div id="active-events-grid" class="events-grid">
+            <div class="loading-item" style="grid-column: 1 / -1;">Yükleniyor...</div>
+          </div>
+        </div>
+
+        <!-- Etkinlik Sayı Yönetimi -->
+        <div class="widget-card" style="margin-top: 30px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+            <h2 style="margin: 0;"><i class="fa-solid fa-trophy"></i> Etkinlik İstatistikleri (Leaderboard)</h2>
+            <div class="controls-bar" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <select id="event-filter-select" class="form-select-small">
+                <option value="all">Tümü</option>
+                <option value="did">Sadece Yapanlar</option>
+                <option value="notdid">Sadece Yapmayanlar</option>
+              </select>
+              <select id="event-sort-select" class="form-select-small">
+                <option value="desc">En Fazla (Azalan)</option>
+                <option value="asc">En Az (Artan)</option>
+              </select>
+              <button type="button" class="btn btn-primary btn-sm" id="btn-export-events">
+                <i class="fa-solid fa-file-export"></i> Dışa Aktar (.txt)
+              </button>
+            </div>
+          </div>
+          <p class="widget-help">Yetkililerin gerçekleştirdikleri etkinlik sayılarını düzenleyebilir veya sıfırlayabilirsiniz. "Member" rolüne sahip olup hiç etkinliğe katılmamış olan üyeler de listede 0 katılım olarak gösterilir.</p>
+
+          <div class="table-container">
+            <table class="data-table leaderboard-table">
+              <thead>
+                <tr>
+                  <th style="text-align: center; width: 60px;">Sıra</th>
+                  <th>Kullanıcı</th>
+                  <th style="text-align: center;">Toplam Etkinlik</th>
+                  <th style="text-align: right;">İşlemler</th>
+                </tr>
+              </thead>
+              <tbody id="event-stats-tbody">
+                <tr><td colspan="4" class="loading-item">Yükleniyor...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5.5) Farm Tab -->
+      <div id="tab-farm" class="tab-content">
+        <!-- Farm Toplam Sayısı -->
+        <div class="stats-grid" style="margin-bottom: 20px;">
+          <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(230,126,34,0.15); color: #e67e22; border: 1px solid rgba(230,126,34,0.3);">
+              <i class="fa-solid fa-tractor"></i>
+            </div>
+            <div class="stat-body">
+              <h3>Toplam Farm (Tüm Üyeler)</h3>
+              <p id="stat-total-farm">-</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Farm İstatistikleri -->
+        <div class="widget-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+            <h2 style="margin: 0;"><i class="fa-solid fa-tractor"></i> Farm İstatistikleri (Leaderboard)</h2>
+            <div class="controls-bar" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <select id="farm-filter-select" class="form-select-small">
+                <option value="all">Tümü</option>
+                <option value="did">Sadece Yapanlar</option>
+                <option value="notdid">Sadece Yapmayanlar</option>
+              </select>
+              <select id="farm-sort-select" class="form-select-small">
+                <option value="desc">En Fazla (Azalan)</option>
+                <option value="asc">En Az (Artan)</option>
+              </select>
+              <button type="button" class="btn btn-primary btn-sm" id="btn-export-farm">
+                <i class="fa-solid fa-file-export"></i> Dışa Aktar (.txt)
+              </button>
+            </div>
+          </div>
+          <p class="widget-help">Sunucudaki kullanıcıların toplam farm teslimat miktarlarını düzenleyebilir veya sıfırlayabilirsiniz. "Member" rolüne sahip olup hiç farm teslim etmemiş olan üyeler de listede 0 farm teslimatı olarak gösterilir.</p>
+
+          <div class="table-container">
+            <table class="data-table leaderboard-table">
+              <thead>
+                <tr>
+                  <th style="text-align: center; width: 60px;">Sıra</th>
+                  <th>Kullanıcı</th>
+                  <th style="text-align: center;">Toplam Farm</th>
+                  <th style="text-align: right;">İşlemler</th>
+                </tr>
+              </thead>
+              <tbody id="farm-stats-tbody">
+                <tr><td colspan="4" class="loading-item">Yükleniyor...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6) Database Tab -->
+      <div id="tab-database" class="tab-content">
+        <div class="widget-card glass">
+          <h2><i class="fa-solid fa-triangle-exclamation"></i> Veritabanı Sıfırlama İşlemleri</h2>
+          <p class="widget-help text-danger">Aşağıdaki işlemler SQLite veritabanındaki verileri **kalıcı olarak silecektir**. Lütfen yapacağınız işlemi onaylamadan önce iki kez düşünün!</p>
+          
+          <div class="db-actions-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="db-action-item">
+              <div class="db-action-info">
+                <h3>Farm Verilerini Sıfırla</h3>
+                <p>Sunucudaki tüm kullanıcıların farm miktarlarını temizler.</p>
+              </div>
+              <button class="btn btn-danger" onclick="resetDatabase('farm')">
+                <i class="fa-solid fa-trash-can"></i> Farm Sıfırla
+              </button>
+            </div>
+
+            <div class="db-action-item">
+              <div class="db-action-info">
+                <h3>Uyarıları Sıfırla</h3>
+                <p>Tüm kullanıcıların aldıkları uyarıları ve geçmişlerini temizler.</p>
+              </div>
+              <button class="btn btn-danger" onclick="resetDatabase('warnings')">
+                <i class="fa-solid fa-trash-can"></i> Uyarıları Sıfırla
+              </button>
+            </div>
+
+            <div class="db-action-item">
+              <div class="db-action-info">
+                <h3>Etkinlik & Aktiflik Sıfırla</h3>
+                <p>Tüm yetkililerin etkinlik/aktiflik katılım verilerini ve geçmişlerini temizler.</p>
+              </div>
+              <button class="btn btn-danger" onclick="resetDatabase('events')">
+                <i class="fa-solid fa-trash-can"></i> Etkinlikleri Sıfırla
+              </button>
+            </div>
+
+            <div class="db-action-item">
+              <div class="db-action-info">
+                <h3>Genel İstatistikleri Sıfırla</h3>
+                <p>Kullanıcıların ses süresi ve mesaj sayısı istatistiklerini temizler.</p>
+              </div>
+              <button class="btn btn-danger" onclick="resetDatabase('stats')">
+                <i class="fa-solid fa-trash-can"></i> İstatistikleri Sıfırla
+              </button>
+            </div>
+
+            <div class="db-action-item">
+              <div class="db-action-info">
+                <h3>Ticket Taleplerini Sıfırla</h3>
+                <p>Tüm açık/kapalı ticket geçmişini ve talepleri temizler.</p>
+              </div>
+              <button class="btn btn-danger" onclick="resetDatabase('tickets')">
+                <i class="fa-solid fa-trash-can"></i> Ticket Sıfırla
+              </button>
+            </div>
+
+            <div class="db-action-item">
+              <div class="db-action-info">
+                <h3>Çekiliş Verilerini Sıfırla</h3>
+                <p>Tüm aktif ve sonlanmış çekiliş verilerini temizler.</p>
+              </div>
+              <button class="btn btn-danger" onclick="resetDatabase('giveaways')">
+                <i class="fa-solid fa-trash-can"></i> Çekiliş Sıfırla
+              </button>
+            </div>
+
+            <div class="db-action-item">
+              <div class="db-action-info">
+                <h3>Ban Affı Taleplerini Sıfırla</h3>
+                <p>Tüm normal ve panelsiz ban affı başvurularını temizler.</p>
+              </div>
+              <button class="btn btn-danger" onclick="resetDatabase('banaf')">
+                <i class="fa-solid fa-trash-can"></i> Ban Affı Sıfırla
+              </button>
+            </div>
+
+            <div class="db-action-item">
+              <div class="db-action-info">
+                <h3>YouTube Takip Kanallarını Sıfırla</h3>
+                <p>Takip edilen YouTube kanallarını ve bekleyen istekleri temizler.</p>
+              </div>
+              <button class="btn btn-danger" onclick="resetDatabase('youtube')">
+                <i class="fa-solid fa-trash-can"></i> YouTube Sıfırla
+              </button>
+            </div>
+
+            <div class="db-action-item">
+              <div class="db-action-info">
+                <h3>Kayıtlı Yasakları Sıfırla</h3>
+                <p>Bot veritabanındaki tüm yasaklama kayıtlarını temizler.</p>
+              </div>
+              <button class="btn btn-danger" onclick="resetDatabase('bans')">
+                <i class="fa-solid fa-trash-can"></i> Yasakları Sıfırla
+              </button>
+            </div>
+
+            <div class="db-action-item danger-border" style="grid-column: span 2;">
+              <div class="db-action-info">
+                <h3>TÜM VERİLERİ SIFIRLA</h3>
+                <p>Veritabanındaki farm, etkinlik, uyarı, ses/mesaj istatistikleri dahil tüm kullanıcı datalarını temizler.</p>
+              </div>
+              <button class="btn btn-danger btn-shake" onclick="resetDatabase('all')">
+                <i class="fa-solid fa-radiation"></i> Komple Sıfırla
+              </button>
+            </div>
+          </div>
+
+          <!-- Kişi Bazlı Sıfırlama -->
+          <div class="widget-card glass" style="margin-top: 30px; border-color: rgba(245, 158, 11, 0.25); background: rgba(245, 158, 11, 0.02);">
+            <h2><i class="fa-solid fa-user-gear" style="color: var(--warning);"></i> Kişi Bazlı Veri Sıfırlama</h2>
+            <p class="widget-help">Belirli bir kullanıcının Discord ID'sini girerek veritabanındaki seçili verilerini temizleyebilirsiniz.</p>
+            
+            <div class="inline-form" style="max-width: 500px; margin-bottom: 15px;">
+              <input type="text" id="reset-member-id" placeholder="Discord ID (Örn: 461096891371880449)" required style="flex-grow: 1;">
+              <button type="button" class="btn btn-warning" id="btn-reset-member" style="white-space: nowrap;">
+                <i class="fa-solid fa-user-slash"></i> Verileri Sıfırla
+              </button>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 15px;" id="reset-member-targets">
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" value="farm" checked style="width: 16px; height: 16px; cursor: pointer;"> Farm Verileri
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" value="warnings" checked style="width: 16px; height: 16px; cursor: pointer;"> Uyarılar
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" value="stats" checked style="width: 16px; height: 16px; cursor: pointer;"> İstatistikler (Ses/Mesaj)
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" value="tickets" checked style="width: 16px; height: 16px; cursor: pointer;"> Ticket Talepleri
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" value="events" checked style="width: 16px; height: 16px; cursor: pointer;"> Etkinlik Katılımları
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" value="activities" checked style="width: 16px; height: 16px; cursor: pointer;"> Aktiflik Katılımları
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" value="bans" checked style="width: 16px; height: 16px; cursor: pointer;"> Yasaklar
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8) Activity Tab -->
+      <div id="tab-activity" class="tab-content">
+        <div class="widget-card glass">
+          <h2><i class="fa-solid fa-people-arrows"></i> Aktif Aktiflik Kontrolü</h2>
+          <p class="widget-help">Mevcut bir aktiflik kontrolü varsa aşağıda detaylarını görebilir, katılımcıları manuel ekleyip çıkartabilir ve aktifliği sonlandırabilirsiniz.</p>
+          
+          <div id="activity-no-active" style="text-align: center; padding: 40px; color: var(--text-muted); font-style: italic;">
+            <i class="fa-solid fa-circle-info" style="font-size: 32px; margin-bottom: 15px; color: var(--primary);"></i>
+            <p>Şu anda aktif bir aktiflik kontrolü bulunmuyor.</p>
+          </div>
+          
+          <div id="activity-active-container" style="display: none;">
+            <div class="db-action-item" style="margin-bottom: 25px; background: rgba(16, 185, 129, 0.03); border-color: rgba(16, 185, 129, 0.25);">
+              <div class="db-action-info">
+                <h3 style="color: var(--success); font-size: 16px; font-weight: 600;"><span id="act-role-name">Yükleniyor...</span> Aktifliği</h3>
+                <p style="margin-top: 5px;">
+                  📅 <strong>Oluşturma:</strong> <span id="act-created-at">-</span> &nbsp;|&nbsp; 
+                  ⏳ <strong>Kalan Süre:</strong> <span id="act-remaining-time">-</span>
+                </p>
+              </div>
+              <button class="btn btn-danger" id="btn-activity-end">
+                <i class="fa-solid fa-circle-stop"></i> Hemen Sonlandır (Bitir)
+              </button>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <!-- Katılanlar Listesi -->
+              <div class="widget-card glass" style="margin-bottom: 0; padding: 20px;">
+                <h3 style="font-size: 15px; font-weight: 600; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                  <span>✅ Katılan Üyeler (<span id="act-p-count">0</span>)</span>
+                </h3>
+                <input type="text" id="search-participants" placeholder="Katılanlarda ara..." style="width: 100%; padding: 8px 12px; font-size: 13px; margin-bottom: 12px;">
+                <div class="list-container" style="max-height: 400px;">
+                  <ul id="activity-participants-list" class="item-list">
+                    <li class="loading-item">Yükleniyor...</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <!-- Katılmayanlar Listesi -->
+              <div class="widget-card glass" style="margin-bottom: 0; padding: 20px;">
+                <h3 style="font-size: 15px; font-weight: 600; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                  <span>❌ Katılmayan Üyeler (<span id="act-np-count">0</span>)</span>
+                </h3>
+                <input type="text" id="search-non-participants" placeholder="Katılmayanlarda ara..." style="width: 100%; padding: 8px 12px; font-size: 13px; margin-bottom: 12px;">
+                <div class="list-container" style="max-height: 400px;">
+                  <ul id="activity-non-participants-list" class="item-list">
+                    <li class="loading-item">Yükleniyor...</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9) YouTube Tab -->
+      <div id="tab-youtube" class="tab-content">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+          <!-- YouTube Ayarları ve Kanal Ekleme -->
+          <div class="widget-card glass">
+            <h2><i class="fa-brands fa-youtube" style="color: #ff0000;"></i> YouTube Sistem Ayarları</h2>
+            <p class="widget-help">Yeni videoların duyurulacağı log kanalını seçin ve takip edilecek kanalları yönetin.</p>
+            
+            <form id="youtube-config-form" style="margin-bottom: 30px;">
+              <div class="form-group">
+                <label for="yt-videoChannelId">Duyuru / Video Log Kanalı</label>
+                <select id="yt-videoChannelId" class="guild-channel-select" required>
+                  <option value="">Seçiniz...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="yt-ytSorumlusuRoleId">YouTube Sorumlusu Rolü</label>
+                <select id="yt-ytSorumlusuRoleId" class="guild-role-select">
+                  <option value="">Seçiniz...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="yt-youtubeBasvuruChannelId">YouTube Başvuru Kanalı</label>
+                <select id="yt-youtubeBasvuruChannelId" class="guild-channel-select">
+                  <option value="">Seçiniz...</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Ayarları Kaydet</button>
+            </form>
+            
+            <hr style="border: 0; border-top: 1px solid var(--card-border); margin: 20px 0;">
+            
+            <h3>Yeni YouTube Kanalı Takip Et</h3>
+            <p class="widget-help" style="margin-bottom: 15px;">Kanal URL'sini (örn: <code>https://youtube.com/@revente</code> veya channel ID <code>UC...</code>) giriniz.</p>
+            
+            <form id="youtube-add-channel-form">
+              <div class="form-group">
+                <label for="yt-channel-url">Kanal URL veya ID</label>
+                <input type="text" id="yt-channel-url" placeholder="Örn: @revente veya UC..." required>
+              </div>
+              <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px; margin-bottom: 15px;">
+                <input type="checkbox" id="yt-everyone-alert" style="width: 18px; height: 18px; cursor: pointer;">
+                <label for="yt-everyone-alert" style="cursor: pointer; user-select: none; font-size: 13px;">Duyuruda @everyone etiketlensin mi?</label>
+              </div>
+              <button type="submit" class="btn btn-success"><i class="fa-solid fa-plus"></i> Takip Ekle</button>
+            </form>
+          </div>
+          
+          <!-- Kayıtlı Kanallar Listesi -->
+          <div class="widget-card glass">
+            <h2><i class="fa-solid fa-list-check"></i> Takip Edilen Kanallar</h2>
+            <p class="widget-help">Şu anda yeni videoları otomatik taranan YouTube kanalları.</p>
+            
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Kanal Adı</th>
+                    <th>@everyone</th>
+                    <th>İşlem</th>
+                  </tr>
+                </thead>
+                <tbody id="youtube-channels-tbody">
+                  <tr><td colspan="3" class="loading-item">Yükleniyor...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10) Ban Affı Tab -->
+      <div id="tab-banaf" class="tab-content">
+        
+        <!-- Üst Grid: Ayarlar ve Manuel Ekleme -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px;">
+          
+          <!-- Panelsiz Ban Affı Sistemi Ayarları -->
+          <div class="widget-card glass" style="margin-bottom: 0;">
+            <h2><i class="fa-solid fa-toggle-on"></i> Panelsiz Ban Affı Sistemi</h2>
+            <p class="widget-help">Üyelerin belirli bir yazma kanalına ban sebeplerini yazarak otomatik listelenmesini sağlayan sistem.</p>
+            
+            <form id="panelsiz-banaf-config-form" class="form-grid">
+              <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px; grid-column: span 2; margin-bottom: 15px;">
+                <input type="checkbox" id="pb-active" style="width: 20px; height: 20px; cursor: pointer;">
+                <label for="pb-active" style="cursor: pointer; font-size: 14px; font-weight: 600; user-select: none;">Panelsiz Ban Affı Sistemi Aktif</label>
+              </div>
+              <div class="form-group">
+                <label for="pb-yazmaKanalId">Yazma Kanalı (Üyelerin yazdığı)</label>
+                <select id="pb-yazmaKanalId" class="guild-channel-select">
+                  <option value="">Seçiniz...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="pb-banListeKanalId">Ban Listesi Kanalı (Taleplerin listelendiği)</label>
+                <select id="pb-banListeKanalId" class="guild-channel-select">
+                  <option value="">Seçiniz...</option>
+                </select>
+              </div>
+              <div style="grid-column: span 2; margin-top: 10px;">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Ayarları Kaydet</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Panelsiz Ban Listesine Manuel Ekleme -->
+          <div class="widget-card glass" style="margin-bottom: 0;">
+            <h2><i class="fa-solid fa-user-plus"></i> Manuel Panelsiz Ban Kaydı</h2>
+            <p class="widget-help">Panelsiz ban listesine doğrudan kullanıcı ID ve sebebiyle kayıt ekleyebilirsiniz.</p>
+            <form id="panelsiz-banaf-add-form" style="display: flex; flex-direction: column; gap: 15px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="pb-add-user-id">Discord ID</label>
+                <input type="text" id="pb-add-user-id" placeholder="Örn: 123456789012345678" required style="width: 100%;">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="pb-add-reason">Ban Sebebi / Açıklama</label>
+                <input type="text" id="pb-add-reason" placeholder="Kural ihlali detayları..." required style="width: 100%;">
+              </div>
+              <div style="margin-top: 10px;">
+                <button type="submit" class="btn btn-success"><i class="fa-solid fa-plus"></i> Kayıt Ekle</button>
+              </div>
+            </form>
+          </div>
+          
+        </div>
+
+        <!-- Alt Grid: Tablolar -->
+        <div style="display: grid; grid-template-columns: 1fr; gap: 30px;">
+          <!-- Panelsiz Ban Listesi -->
+          <div class="widget-card glass" style="margin-bottom: 0;">
+            <h2><i class="fa-solid fa-list-ul" style="color: var(--warning);"></i> Panelsiz Ban Listesi Kayıtları</h2>
+            <p class="widget-help">Panelsiz sistemden gelen veya manuel eklenen ban affı kayıtları.</p>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Kullanıcı</th>
+                    <th>Sebep / Mesaj</th>
+                    <th>İşlem</th>
+                  </tr>
+                </thead>
+                <tbody id="panelsiz-banaf-tbody">
+                  <tr><td colspan="3" class="loading-item">Yükleniyor...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Normal Ban Affı Talepleri -->
+          <div class="widget-card glass" style="margin-bottom: 0;">
+            <h2><i class="fa-solid fa-envelope-open-text" style="color: var(--primary);"></i> Normal Ban Affı Başvuruları</h2>
+            <p class="widget-help">Discord paneli üzerinden <code>Talep Oluştur</code> butonuyla yapılmış başvurular.</p>
+            
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Talep ID</th>
+                    <th>Başvuran ID</th>
+                    <th>Ban Türü</th>
+                    <th>Ban Sebebi</th>
+                    <th>Banlayan</th>
+                    <th>Durum</th>
+                    <th>İşlemler</th>
+                  </tr>
+                </thead>
+                <tbody id="banaf-requests-tbody">
+                  <tr><td colspan="7" class="loading-item">Yükleniyor...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 11) Çekiliş Tab -->
+      <div id="tab-cekilis" class="tab-content">
+        <!-- Aktif Çekilişler -->
+        <div class="widget-card glass" style="margin-bottom: 30px;">
+          <h2><i class="fa-solid fa-hourglass-start" style="color: var(--primary);"></i> Aktif Çekilişler</h2>
+          <p class="widget-help">Sunucuda şu an devam eden ve katılım toplayan çekilişlerin listesi. Manuel kazanan seçerek bitirebilirsiniz.</p>
+          
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Mesaj ID</th>
+                  <th>Ödül</th>
+                  <th>Kazanan Sayısı</th>
+                  <th>Katılımcı Sayısı</th>
+                  <th>Bitiş Tarihi</th>
+                  <th>İşlemler</th>
+                </tr>
+              </thead>
+              <tbody id="active-giveaways-tbody">
+                <tr><td colspan="6" class="loading-item">Yükleniyor...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- Bitmiş Çekilişler -->
+        <div class="widget-card glass">
+          <h2><i class="fa-solid fa-hourglass-end" style="color: var(--danger);"></i> Bitmiş Çekilişler</h2>
+          <p class="widget-help">Sona ermiş çekilişler. Dilerseniz yeniden kazanan çekebilirsiniz.</p>
+          
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Mesaj ID</th>
+                  <th>Ödül</th>
+                  <th>Kazanan Sayısı</th>
+                  <th>Kazananlar</th>
+                  <th>Tarih</th>
+                  <th>İşlemler</th>
+                </tr>
+              </thead>
+              <tbody id="ended-giveaways-tbody">
+                <tr><td colspan="6" class="loading-item">Yükleniyor...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 12) IC Kontrol Tab -->
+      <div id="tab-ickontrol" class="tab-content">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+          <!-- IC Kontrol Genel Ayarlar -->
+          <div class="widget-card glass">
+            <h2><i class="fa-solid fa-sliders"></i> IC Kontrol Genel Ayarlar</h2>
+            <p class="widget-help">FiveM aktiflik tarama ayarlarını ve türünü buradan yönetebilirsiniz.</p>
+            
+            <form id="ickontrol-config-form">
+              <div class="form-group">
+                <label for="ick-mainServer">Ana Sunucu (Etkinlik kontrolü bu sunucu verisine dayanır)</label>
+                <select id="ick-mainServer" required>
+                  <option value="">Seçiniz...</option>
+                  <option value="MDRP">MDRP</option>
+                  <option value="WELL">WELL</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Tarama Kontrol Türü</label>
+                <p class="widget-help" style="margin: 4px 0 10px 0; font-size: 12px;">İkisini aynı anda seçebilirsiniz.</p>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="ick-type-isim" style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;">
+                    <label for="ick-type-isim" style="cursor: pointer; user-select: none; margin-bottom: 0; font-size: 14px;">
+                      <strong>İsim (Nickname Prefix)</strong>
+                      <span style="display: block; font-size: 12px; color: var(--text-muted); font-weight: 400;">Kullanıcı adının başına <code>[SUNUCU]</code> prefixi ekler/kaldırır</span>
+                    </label>
+                  </div>
+                  <div style="display: flex; align-items: flex-start; gap: 10px;">
+                    <input type="checkbox" id="ick-type-kanal" style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; margin-top: 3px;">
+                    <label for="ick-type-kanal" style="cursor: pointer; user-select: none; margin-bottom: 0; font-size: 14px;">
+                      <strong>Kanal-list (Yazılı Liste)</strong>
+                      <span style="display: block; font-size: 12px; color: var(--text-muted); font-weight: 400;">Seçilen kanalda oyuncu listesini 5 dk'da bir günceller</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group" id="ick-channel-group" style="display: none;">
+                <label for="ick-channelId">Liste Mesajı Kanalı</label>
+                <select id="ick-channelId" class="guild-channel-select">
+                  <option value="">Seçiniz...</option>
+                </select>
+              </div>
+
+              <button type="submit" class="btn btn-success" style="margin-top: 15px;">
+                <i class="fa-solid fa-floppy-disk"></i> Ayarları Kaydet
+              </button>
+            </form>
+          </div>
+
+          <!-- Taramaya Dahil Edilecek Sunucular -->
+          <div class="widget-card glass">
+            <h2><i class="fa-solid fa-server"></i> Taramaya Dahil Edilecek Sunucular</h2>
+            <p class="widget-help">Hangi sunuculardaki oyuncuların taranacağını seçin. Ana sunucu zorunlu olarak taranır.</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+              <div class="form-group" style="flex-direction: row; align-items: center; gap: 12px; margin-bottom: 0;">
+                <input type="checkbox" id="ick-srv-MDRP" style="width: 20px; height: 20px; cursor: pointer;">
+                <label for="ick-srv-MDRP" style="cursor: pointer; font-size: 14px; font-weight: 600; user-select: none;">MDRP</label>
+              </div>
+              <div class="form-group" style="flex-direction: row; align-items: center; gap: 12px; margin-bottom: 0;">
+                <input type="checkbox" id="ick-srv-WELL" style="width: 20px; height: 20px; cursor: pointer;">
+                <label for="ick-srv-WELL" style="cursor: pointer; font-size: 14px; font-weight: 600; user-select: none;">WELL</label>
+              </div>
+              <div class="form-group" style="flex-direction: row; align-items: center; gap: 12px; margin-bottom: 0;">
+                <input type="checkbox" id="ick-srv-MDPVP" style="width: 20px; height: 20px; cursor: pointer;">
+                <label for="ick-srv-MDPVP" style="cursor: pointer; font-size: 14px; font-weight: 600; user-select: none;">MDPVP</label>
+              </div>
+              <div class="form-group" style="flex-direction: row; align-items: center; gap: 12px; margin-bottom: 0;">
+                <input type="checkbox" id="ick-srv-GUID" style="width: 20px; height: 20px; cursor: pointer;">
+                <label for="ick-srv-GUID" style="cursor: pointer; font-size: 14px; font-weight: 600; user-select: none;">GUİD</label>
+              </div>
+            </div>
+            
+            <button type="button" id="btn-save-ick-servers" class="btn btn-primary" style="margin-top: 25px;">
+              <i class="fa-solid fa-circle-check"></i> Sunucu Listesini Güncelle
+            </button>
+          </div>
+        </div>
+
+        <!-- Şu Anda Oyunda Olan Ekip Üyeleri -->
+        <div class="widget-card glass" style="margin-top: 30px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+            <h2 style="margin: 0;"><i class="fa-solid fa-gamepad" style="color: var(--primary);"></i> Ekip Üyeleri Oyun Durumu</h2>
+            <div class="controls-bar" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <select id="ickontrol-filter-select" class="form-select-small">
+                <option value="online">Oyunda Olanlar</option>
+                <option value="offline">Oyunda Olmayanlar (Onaylı)</option>
+                <option value="all">Tüm Onaylı Üyeler</option>
+              </select>
+              <button type="button" class="btn btn-primary btn-sm" id="btn-export-ickontrol">
+                <i class="fa-solid fa-file-export"></i> Dışa Aktar (.txt)
+              </button>
+            </div>
+          </div>
+          <p class="widget-help">onayRoleId rolüne sahip olan üyelerin FiveM sunucularındaki aktiflik durumu. Oyunda olan ve olmayan üyeleri filtreleyip dışa aktarabilirsiniz.</p>
+          
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr id="ickontrol-table-header">
+                  <th>Üye</th>
+                  <th>Oynadığı Sunucu / Durum</th>
+                  <th>FiveM Karakter Adı / Detay</th>
+                  <th>Discord ID</th>
+                </tr>
+              </thead>
+              <tbody id="ickontrol-members-tbody">
+                <tr><td colspan="4" class="loading-item">Yükleniyor veya oyunda kimse bulunmuyor...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 13) Bio & Guild Tarama Tab -->
+      <div id="tab-bioguild" class="tab-content">
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 25px;">
+          <!-- Bio & Guild Ayarları -->
+          <div class="widget-card glass">
+            <h2><i class="fa-solid fa-sliders"></i> Bio & Guild Tarama Ayarları</h2>
+            <p class="widget-help">Taramalarda aranacak anahtar kelimeleri ve user token ayarını buradan yönetebilirsiniz.</p>
+            
+            <form id="bioguild-config-form">
+              <div class="form-group">
+                <label for="bg-guildName">Aranacak Guild Kelimesi (Sunucu Etiketi/Status)</label>
+                <input type="text" id="bg-guildName" placeholder="Örn: REV" required style="width: 100%;">
+              </div>
+
+              <div class="form-group">
+                <label for="bg-bioName">Aranacak Bio Kelimesi (Hakkımda/Pronouns)</label>
+                <input type="text" id="bg-bioName" placeholder="Örn: .revente" required style="width: 100%;">
+              </div>
+
+              <div class="form-group">
+                <label for="bg-userToken">User Token (Discord hesabı tokeni)</label>
+                <input type="password" id="bg-userToken" placeholder="Mevcut tokeni değiştirmek için girin (gizlidir)" style="width: 100%;">
+                <span id="bg-token-status" style="font-size: 11px; margin-top: 4px; color: var(--success); font-weight: 500;"></span>
+              </div>
+
+              <button type="submit" class="btn btn-success" style="margin-top: 15px;">
+                <i class="fa-solid fa-floppy-disk"></i> Ayarları Kaydet
+              </button>
+            </form>
+          </div>
+
+          <!-- Taramayı Çalıştır ve İzle -->
+          <div class="widget-card glass">
+            <h2><i class="fa-solid fa-magnifying-glass"></i> Taramayı Çalıştır</h2>
+            <p class="widget-help">Taramak istediğiniz türü seçip canlı tarama işlemini başlatabilirsiniz.</p>
+            
+            <div style="display: flex; gap: 12px; margin-top: 20px; align-items: center;">
+              <select id="bg-scan-type" style="flex: 1; padding: 12px; font-size: 14px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.25); color: var(--text-main);">
+                <option value="guild">Guild (Sunucu Etiketi & Status)</option>
+                <option value="bio">Bio (Hakkımda & Pronouns)</option>
+              </select>
+              <button type="button" id="btn-start-bg-scan" class="btn btn-primary" style="padding: 12px 24px;">
+                <i class="fa-solid fa-play"></i> Taramayı Başlat
+              </button>
+            </div>
+
+            <!-- Canlı İlerleme Durumu -->
+            <div id="bg-scan-progress-wrapper" style="margin-top: 25px; display: none; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span id="bg-scan-status-label" style="font-weight: 600; font-size: 13px; color: var(--warning);">Tarama Yapılıyor...</span>
+                <span id="bg-scan-progress-text" style="font-family: monospace; font-size: 12px; color: var(--text-muted);">0 / 0</span>
+              </div>
+              <div style="width: 100%; height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden;">
+                <div id="bg-scan-progress-bar" style="width: 0%; height: 100%; background: var(--warning); transition: width 0.3s ease;"></div>
+              </div>
+            </div>
+
+            <!-- Sonuç Özeti -->
+            <div id="bg-scan-summary" style="margin-top: 25px; display: none;">
+              <h3 style="font-size: 15px; margin-bottom: 8px; color: var(--success);"><i class="fa-solid fa-clipboard-check"></i> Tarama Sonucu</h3>
+              <p id="bg-scan-summary-text" style="font-size: 13px; color: var(--text-muted); line-height: 1.5;"></p>
+              
+              <!-- Küresel İşlemler -->
+              <div id="bg-scan-actions" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); align-items: center; gap: 15px; flex-wrap: wrap;">
+                <button type="button" id="btn-bg-pull-roles" class="btn btn-danger" style="padding: 10px 20px;">
+                  <i class="fa-solid fa-user-minus"></i> Permleri Çek
+                </button>
+                <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+                  <select id="bg-send-list-channel" style="padding: 10px; font-size: 13px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.25); color: var(--text-main); min-width: 180px;">
+                    <option value="">Kanal Seçiniz...</option>
+                  </select>
+                  <button type="button" id="btn-bg-send-list" class="btn btn-primary" style="padding: 10px 20px;">
+                    <i class="fa-solid fa-paper-plane"></i> Liste Gönder
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Uyumsuz Üyeler Tablosu -->
+        <div class="widget-card glass" style="margin-top: 30px;">
+          <h2><i class="fa-solid fa-user-xmark" style="color: var(--danger);"></i> Kurala Uymayan Üyeler</h2>
+          <p class="widget-help">Yapılan son taramada hedeflenen kelimeyi profilinde bulundurmayan üyelerin listesi.</p>
+          
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Üye</th>
+                  <th>Discord Tag</th>
+                  <th>Discord ID</th>
+                  <th>İşlem</th>
+                </tr>
+              </thead>
+              <tbody id="bioguild-results-tbody">
+                <tr><td colspan="4" class="loading-item">Henüz tarama yapılmadı.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- Etkinlik Düzenleme Modalı -->
+  <div id="event-edit-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+    <div class="widget-card glass" style="width: 500px; max-width: 90%; margin-bottom: 0;">
+      <h2><i class="fa-solid fa-pen-to-square"></i> Etkinliği Düzenle</h2>
+      <p class="widget-help">Etkinlik bilgilerini güncelleyin. Kaydettiğinizde Discord üzerindeki duyuru mesajı da güncellenecektir.</p>
+      
+      <form id="event-edit-form">
+        <input type="hidden" id="edit-event-message-id">
+        <div class="form-group">
+          <label for="edit-event-type">Etkinlik Türü</label>
+          <input type="text" id="edit-event-type" required placeholder="Örn: Yarış, Toplantı">
+        </div>
+        <div class="form-group">
+          <label for="edit-event-limit">Maksimum Katılımcı Sayısı (Limit)</label>
+          <input type="text" id="edit-event-limit" required placeholder="Örn: 10">
+        </div>
+        <div class="form-group">
+          <label for="edit-event-sure">Katılım Süresi</label>
+          <input type="text" id="edit-event-sure" required placeholder="Örn: 22:00 veya 1 saat">
+        </div>
+        <div class="form-group">
+          <label for="edit-event-yedek">Yedek Oyuncu Sayısı</label>
+          <input type="text" id="edit-event-yedek" placeholder="Örn: 5">
+        </div>
+        <div class="form-group">
+          <label for="edit-event-toplanma">Toplanma Saati</label>
+          <input type="text" id="edit-event-toplanma" placeholder="Örn: 21:30">
+        </div>
+        
+        <div class="btn-group" style="margin-top: 20px; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" onclick="closeEventEditModal()" style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--card-border);">İptal</button>
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Çekiliş Manuel Kazanan Modalı -->
+  <div id="giveaway-manual-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+    <div class="widget-card glass" style="width: 500px; max-width: 90%; margin-bottom: 0;">
+      <h2><i class="fa-solid fa-trophy"></i> Manuel Kazanan Seç ve Bitir</h2>
+      <p class="widget-help">Çekilişi manuel kazanan Discord ID'leri belirterek sonlandırın.</p>
+      
+      <form id="giveaway-manual-form">
+        <input type="hidden" id="giveaway-manual-message-id">
+        <div class="form-group">
+          <label for="giveaway-forced-winner">Kazanan Discord ID(leri)</label>
+          <input type="text" id="giveaway-forced-winner" required placeholder="Örn: 461096891371880449 (Virgülle ayırabilirsiniz)">
+        </div>
+        
+        <div class="btn-group" style="margin-top: 20px; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" onclick="closeGiveawayManualModal()" style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--card-border);">İptal</button>
+          <button type="submit" class="btn btn-primary">Çekilişi Bitir</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Sistem Detaylı Ayar Modalı -->
+  <div id="system-settings-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+    <div class="widget-card glass" style="width: 600px; max-width: 95%; max-height: 90vh; overflow-y: auto; margin-bottom: 0; padding: 25px;">
+      <h2 id="sys-modal-title"><i class="fa-solid fa-gear"></i> Sistem Ayarları</h2>
+      <p id="sys-modal-desc" class="widget-help">Bu sistemle ilişkili tüm ayarları ve aktiflik durumunu buradan düzenleyebilirsiniz.</p>
+      
+      <form id="system-modal-form">
+        <input type="hidden" id="sys-modal-system-key">
+        
+        <!-- Master Toggle -->
+        <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px; margin-bottom: 20px; background: rgba(255,255,255,0.05); padding: 12px 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+          <input type="checkbox" id="sys-modal-master-toggle" style="width: 22px; height: 22px; cursor: pointer;">
+          <label for="sys-modal-master-toggle" style="cursor: pointer; font-size: 15px; font-weight: 600; user-select: none; margin-bottom: 0;">Sistemi Etkinleştir</label>
+        </div>
+        
+        <!-- Dinamik Alanlar -->
+        <div id="sys-modal-fields-container" class="form-grid">
+          <!-- JS ile doldurulacak -->
+        </div>
+        
+        <div class="btn-group" style="margin-top: 25px; justify-content: flex-end; gap: 10px;">
+          <button type="button" class="btn btn-secondary" onclick="closeSystemSettingsModal()" style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--card-border);">İptal</button>
+          <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i> Ayarları Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Ekip Sistemi Yeniden Kurulum Onay Modalı -->
+  <div id="confirm-setup-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+    <div class="widget-card glass" style="width: 450px; max-width: 90%; margin-bottom: 0; text-align: center; padding: 30px;">
+      <h2 style="color: var(--warning);"><i class="fa-solid fa-triangle-exclamation"></i> Zaten Sistem Kurulu!</h2>
+      <p style="margin: 20px 0; font-size: 15px; color: var(--text-main); line-height: 1.6;">
+        Sunucunuzda ekip sistemi zaten kurulu görünüyor. Yine de tekrardan kurmak istiyor musunuz?
+      </p>
+      <div class="btn-group" style="justify-content: center; gap: 15px;">
+        <button type="button" id="btn-confirm-setup-yes" class="btn btn-warning" style="padding: 10px 20px;">Evet, Tekrar Kur</button>
+        <button type="button" id="btn-confirm-setup-no" class="btn btn-secondary" style="padding: 10px 20px; background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--card-border);">Hayır, Vazgeç</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ekip Sistem Kur Detaylı Kurulum Modalı -->
+  <div id="ekip-sistem-kur-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9998; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+    <div class="widget-card glass" style="width: 750px; max-width: 95%; max-height: 90vh; overflow-y: auto; margin-bottom: 0; padding: 25px;">
+      <h2><i class="fa-solid fa-server"></i> Ekip Sistemi Kurulumu</h2>
+      <p class="widget-help">Ekip sisteminin rolleri, kategorileri ve kanalları için özel Discord ID'leri girebilirsiniz. Boş bırakılan alanlar bot tarafından otomatik oluşturulacaktır.</p>
+      
+      <form id="ekip-sistem-kur-form">
+        <!-- 1. Ban Affı Tercihi -->
+        <h3 style="font-size: 15px; margin-bottom: 12px; color: var(--warning); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px;">
+          <i class="fa-solid fa-user-slash"></i> Ban Affı Sistemi Tercihi
+        </h3>
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label for="setup-banAfType">Kullanılacak Ban Affı Sistemi</label>
+          <select id="setup-banAfType" required style="width: 100%; padding: 10px; background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); border-radius: 6px;">
+            <option value="panelli">Panelli Ban Affı Sistemi (Kanallı & Talepli)</option>
+            <option value="panelsiz">Panelsiz Ban Affı Sistemi (Basit Yazma & Liste)</option>
+          </select>
+        </div>
+
+        <!-- Panelsiz Ban Affı Alanları -->
+        <div id="setup-panelsiz-fields" style="display: none; background: rgba(245, 158, 11, 0.03); border: 1px solid rgba(245, 158, 11, 0.15); border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+          <h4 style="margin-top: 0; margin-bottom: 10px; color: var(--warning); font-size: 13px;">Panelsiz Ban Affı Kanalları</h4>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="setup-panelsizYazmaKanalId">Yazma Kanalı ID</label>
+              <input type="text" id="setup-panelsizYazmaKanalId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+            </div>
+            <div class="form-group">
+              <label for="setup-panelsizBanListeKanalId">Ban Listesi Kanalı ID</label>
+              <input type="text" id="setup-panelsizBanListeKanalId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Sistem Rolleri -->
+        <h3 style="font-size: 15px; margin-bottom: 12px; color: var(--warning); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px; margin-top: 20px;">
+          <i class="fa-solid fa-id-card-clip"></i> Sistem Rolleri
+        </h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="setup-banCommandRoleId">Ban Komutu Rolü ID</label>
+            <input type="text" id="setup-banCommandRoleId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-ticketStaffRoleId">Alım Sorumlusu Rolü ID</label>
+            <input type="text" id="setup-ticketStaffRoleId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-onayRoleId">Ekip Üyesi Rolü ID</label>
+            <input type="text" id="setup-onayRoleId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-ytSorumlusuRoleId">YouTube Sorumlusu Rolü ID</label>
+            <input type="text" id="setup-ytSorumlusuRoleId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-farmSorumlusuRoleId">Farm Sorumlusu Rolü ID</label>
+            <input type="text" id="setup-farmSorumlusuRoleId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-jailRoleId">Jail Rolü ID</label>
+            <input type="text" id="setup-jailRoleId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+        </div>
+
+        <!-- 3. Kategoriler -->
+        <h3 style="font-size: 15px; margin-bottom: 12px; color: var(--warning); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px; margin-top: 25px;">
+          <i class="fa-solid fa-folder-open"></i> Sistem Kategorileri
+        </h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="setup-basvuruCategoryId">BAŞVURU Kategorisi ID</label>
+            <input type="text" id="setup-basvuruCategoryId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-yonetimCategoryId">YÖNETİM Kategorisi ID</label>
+            <input type="text" id="setup-yonetimCategoryId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-killCategoryId">KİLL Kategorisi ID</label>
+            <input type="text" id="setup-killCategoryId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-logCategoryId">LOG KANALLARI Kategorisi ID</label>
+            <input type="text" id="setup-logCategoryId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+        </div>
+
+        <!-- 4. Temel Kanallar -->
+        <h3 style="font-size: 15px; margin-bottom: 12px; color: var(--warning); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px; margin-top: 25px;">
+          <i class="fa-solid fa-hashtag"></i> Temel Sistem Kanalları
+        </h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="setup-videoChannelId">video-paylasim Kanalı ID</label>
+            <input type="text" id="setup-videoChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-warningPublicChannelId">uyarılar Kanalı ID</label>
+            <input type="text" id="setup-warningPublicChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-ticketChannelId">ticket Kanalı ID</label>
+            <input type="text" id="setup-ticketChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-onayChannelId">onay-red Kanalı ID</label>
+            <input type="text" id="setup-onayChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-farmIstekChannelId">farm-istek Kanalı ID</label>
+            <input type="text" id="setup-farmIstekChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-youtubeBasvuruChannelId">youtube-kanal-başvur Kanalı ID</label>
+            <input type="text" id="setup-youtubeBasvuruChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-farmManagementChannelId">farm-yönetim Kanalı ID</label>
+            <input type="text" id="setup-farmManagementChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-youtubeManagementChannelId">youtube-yönetim Kanalı ID</label>
+            <input type="text" id="setup-youtubeManagementChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group" id="setup-banAfChannelId-group">
+            <label for="setup-banAfChannelId">ban-affi-basvuru Kanalı ID</label>
+            <input type="text" id="setup-banAfChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group" id="setup-banAffiManagementChannelId-group">
+            <label for="setup-banAffiManagementChannelId">ban-affı-yönetim Kanalı ID</label>
+            <input type="text" id="setup-banAffiManagementChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label for="setup-aktifIslemlerChannelId">aktif-işlemler Kanalı ID</label>
+            <input type="text" id="setup-aktifIslemlerChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+        </div>
+
+        <!-- 5. Log Kanalları -->
+        <h3 style="font-size: 15px; margin-bottom: 12px; color: var(--warning); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px; margin-top: 25px;">
+          <i class="fa-solid fa-list-check"></i> Özel Log Kanalları
+        </h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="setup-banLogChannelId">ban-unban-log Kanalı ID</label>
+            <input type="text" id="setup-banLogChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-warningLogChannelId">uyari-log Kanalı ID</label>
+            <input type="text" id="setup-warningLogChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-farmLogChannelId">farm-log Kanalı ID</label>
+            <input type="text" id="setup-farmLogChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-ticketLogChannelId">ticket-log Kanalı ID</label>
+            <input type="text" id="setup-ticketLogChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-sesLogChannelId">ses-log Kanalı ID</label>
+            <input type="text" id="setup-sesLogChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-davetLogChannelId">davet-log Kanalı ID</label>
+            <input type="text" id="setup-davetLogChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-girisLogChannelId">giris-cikis-log Kanalı ID</label>
+            <input type="text" id="setup-girisLogChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-kanalLogChannelId">kanal-log Kanalı ID</label>
+            <input type="text" id="setup-kanalLogChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-isimLogChannelId">isim-log Kanalı ID</label>
+            <input type="text" id="setup-isimLogChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-youtubeLogChannelId">youtube-log Kanalı ID</label>
+            <input type="text" id="setup-youtubeLogChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-roleLogChannelId">rol-log Kanalı ID</label>
+            <input type="text" id="setup-roleLogChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-dmDuyuruLogChannelId">dm-duyuru-log Kanalı ID</label>
+            <input type="text" id="setup-dmDuyuruLogChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-botLogChannelId">bot-log Kanalı ID</label>
+            <input type="text" id="setup-botLogChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-banAfLogChannelId">ban-affı-log Kanalı ID</label>
+            <input type="text" id="setup-banAfLogChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-activityLogChannelId">aktiflik-log Kanalı ID</label>
+            <input type="text" id="setup-activityLogChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+          <div class="form-group">
+            <label for="setup-messageLogChannelId">mesaj-log Kanalı ID</label>
+            <input type="text" id="setup-messageLogChannelId" placeholder="Boş ise otomatik oluşturulur" style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); color: var(--text-main); padding: 8px; border-radius: 6px;">
+          </div>
+        </div>
+
+        <div class="btn-group" style="margin-top: 25px; justify-content: flex-end; gap: 10px;">
+          <button type="button" id="btn-setup-modal-cancel" class="btn btn-secondary" style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--card-border);">İptal</button>
+          <button type="submit" class="btn btn-warning"><i class="fa-solid fa-server"></i> Kurulumu Başlat</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
+
